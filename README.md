@@ -173,3 +173,20 @@ Open your browser and visit:
 * Prepared foundation for future sprints
 
 ---
+
+## Environment Variable Management
+
+This project uses environment variables to securely manage configuration and secrets.
+
+- `.env.local` is used for actual environment values and is ignored by Git.
+- `.env.example` provides a template of required variables for setup.
+
+### Variable Scope
+- **Server-side only:** `DATABASE_URL`, `INTERNAL_API_SECRET`
+- **Client-side safe:** `NEXT_PUBLIC_APP_NAME`, `NEXT_PUBLIC_API_BASE_URL`
+
+### Security
+- Server-only variables are never used in client components.
+- Only variables prefixed with `NEXT_PUBLIC_` are exposed.
+- Sensitive files are protected using `.gitignore`.
+
