@@ -1,9 +1,6 @@
-import { headers } from "next/headers";
-
 export const dynamic = "force-dynamic";
 
 async function getUserData() {
-
   const res = await fetch(`http://localhost:3000/api/user`, {
     cache: "no-store",
   });

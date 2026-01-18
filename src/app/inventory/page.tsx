@@ -16,8 +16,10 @@ export default async function InventoryPage() {
   return (
     <div>
       <h1>Live Blood Inventory</h1>
-      {data.map(b => (
-        <p key={b.type}>{b.type}: {b.units} units</p>
+      {data.map((b) => (
+        <p key={b.type}>
+          {b.type}: {b.units} units
+        </p>
       ))}
     </div>
   );
