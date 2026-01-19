@@ -190,3 +190,28 @@ This project uses environment variables to securely manage configuration and sec
 - Only variables prefixed with `NEXT_PUBLIC_` are exposed.
 - Sensitive files are protected using `.gitignore`.
 
+
+## PostgreSQL Schema Design
+
+This project uses PostgreSQL with Prisma ORM to design a normalized relational
+database schema for the Blood Bank Management system.
+
+### Core Entities
+- **User** – Stores basic information about donors and hospitals
+- **BloodInventory** – Tracks available blood units at hospitals
+- **BloodRequest** – Represents blood requests made by users
+
+### Relationships
+- Each blood request is linked to a user using a foreign key
+- Primary keys uniquely identify each record
+- Unique constraints prevent duplicate user emails
+
+### Normalization
+- All fields contain atomic values (1NF)
+- No partial dependencies exist (2NF)
+- No transitive dependencies are present (3NF)
+
+### Validation
+The schema was validated using Prisma CLI and successfully applied to a
+PostgreSQL database using Prisma Migrate.
+

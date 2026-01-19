@@ -1,0 +1,72 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  name      String
+  email     String    @unique
+  role      UserRole
+  createdAt DateTime  @default(now())
+
+  donor     DonorProfile?
+  hospital  Hospital?
+  requests  BloodRequest[]
+}
+
+model DonorProfile {
+  id           Int       @id @default(autoincrement())
+  bloodGroup   String
+  city         String
+  lastDonation DateTime?
+  userId       Int       @unique
+
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Hospital {
+  id        Int      @id @default(autoincrement())
+  name      String
+  city      String
+  userId    Int      @unique
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  inventory BloodInventory[]
+}
+
+model BloodInventory {
+  id          Int      @id @default(autoincrement())
+  bloodGroup  String
+  units       Int
+  hospitalId  Int
+
+  hospital    Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+}
+
+model BloodRequest {
+  id          Int           @id @default(autoincrement())
+  bloodGroup  String
+  units       Int
+  status      RequestStatus
+  createdAt   DateTime      @default(now())
+  userId      Int
+
+  user        User          @relation(fields: [userId], references: [id])
+}
+
+enum UserRole {
+  DONOR
+  HOSPITAL
+  NGO
+}
+
+enum RequestStatus {
+  PENDING
+  FULFILLED
+  CANCELLED
+}
