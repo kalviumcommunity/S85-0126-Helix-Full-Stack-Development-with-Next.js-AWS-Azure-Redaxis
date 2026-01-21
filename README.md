@@ -215,3 +215,24 @@ database schema for the Blood Bank Management system.
 The schema was validated using Prisma CLI and successfully applied to a
 PostgreSQL database using Prisma Migrate.
 
+----------
+
+## Database Setup (Prisma + PostgreSQL)
+
+This project uses **Prisma ORM** with **PostgreSQL** for schema management, migrations, and seed data.
+
+### Schema Design
+Core models include User, DonorProfile, Hospital, BloodInventory, and BloodRequest.  
+Relations and constraints ensure data consistency and normalization.
+
+### Prisma Setup
+Prisma is initialized and configured with PostgreSQL.  
+Prisma Client is used for type-safe database access across the app.
+
+### Migrations
+Schema changes are applied using Prisma migrations:
+
+```bash
+npx prisma migrate dev
+
+
