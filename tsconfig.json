@@ -23,6 +23,7 @@
     "incremental": true,
 
     "plugins": [{ "name": "next" }],
+    "baseUrl": "src",
     "paths": {
       "@/*": ["./*"]
     }
