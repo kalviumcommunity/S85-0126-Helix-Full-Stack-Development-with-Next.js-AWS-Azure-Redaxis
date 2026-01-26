@@ -1,55 +1,70 @@
-import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { hashPassword } from "@/lib/hash";
 
 export async function POST(req) {
   try {
-    const { name, email, role, bloodGroup, city, hospitalName } =
-      await req.json();
+    const body = await req.json();
 
-    const user = await prisma.$transaction(async (tx) => {
-      // 1. Create user
-      const newUser = await tx.user.create({
-        data: {
-          name,
-          email,
-          role,
-        },
-      });
+    const { name, email, password, role, bloodGroup, city } = body;
 
-      // 2. Role-based profile creation
-      if (role === "DONOR") {
-        await tx.donorProfile.create({
-          data: {
-            bloodGroup,
-            city,
-            userId: newUser.id,
-          },
-        });
-      }
+    if (!name || !email || !password || !role) {
+      return NextResponse.json(
+        { message: "Missing required fields" },
+        { status: 400 }
+      );
+    }
 
-      if (role === "HOSPITAL") {
-        await tx.hospital.create({
-          data: {
-            name: hospitalName,
-            city,
-            userId: newUser.id,
-          },
-        });
-      }
-
-      return newUser;
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
     });
 
-    return NextResponse.json({ success: true, data: user }, { status: 201 });
-  } catch (error) {
-    console.error("Signup failed:", error.message);
+    if (existingUser) {
+      return NextResponse.json(
+        { message: "User already exists" },
+        { status: 409 }
+      );
+    }
 
-    return NextResponse.json(
-      {
-        success: false,
-        message: "Signup failed. Transaction rolled back.",
+    const hashedPassword = await hashPassword(password);
+
+    const user = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        role,
+        donor:
+          role === "DONOR"
+            ? {
+                create: {
+                  bloodGroup,
+                  city,
+                },
+              }
+            : undefined,
+        hospital:
+          role === "HOSPITAL"
+            ? {
+                create: {
+                  name,
+                  city,
+                },
+              }
+            : undefined,
       },
-      { status: 400 }
+      include: {
+        donor: true,
+        hospital: true,
+      },
+    });
+
+    return NextResponse.json(user, { status: 201 });
+  } catch (error) {
+    console.error("Signup error:", error);
+    return NextResponse.json(
+      { message: "Internal server error" },
+      { status: 500 }
     );
   }
 }
