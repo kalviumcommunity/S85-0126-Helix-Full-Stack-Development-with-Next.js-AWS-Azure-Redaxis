@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { comparePassword } from "@/lib/hash";
+import { sendSuccess, sendError } from "@/lib/responseHandler";
 
 export async function POST(req) {
   try {
@@ -8,9 +8,10 @@ export async function POST(req) {
     const { email, password } = body;
 
     if (!email || !password) {
-      return NextResponse.json(
-        { message: "Email and password are required" },
-        { status: 400 }
+      return sendError(
+        "Email and password are required",
+        "VALIDATION_ERROR",
+        400
       );
     }
 
@@ -23,29 +24,25 @@ export async function POST(req) {
     });
 
     if (!user || !user.password) {
-      return NextResponse.json(
-        { message: "Invalid credentials" },
-        { status: 401 }
-      );
+      return sendError("Invalid credentials", "AUTH_ERROR", 401);
     }
 
     const isMatch = await comparePassword(password, user.password);
 
     if (!isMatch) {
-      return NextResponse.json(
-        { message: "Invalid credentials" },
-        { status: 401 }
-      );
+      return sendError("Invalid credentials", "AUTH_ERROR", 401);
     }
 
     const { password: _, ...safeUser } = user;
 
-    return NextResponse.json(safeUser, { status: 200 });
+    return sendSuccess(safeUser, "Login successful", 200);
   } catch (error) {
     console.error("Login error:", error);
-    return NextResponse.json(
-      { message: "Internal server error" },
-      { status: 500 }
+    return sendError(
+      "Internal server error",
+      "INTERNAL_ERROR",
+      500,
+      error.message
     );
   }
 }

@@ -1,13 +1,14 @@
-import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { sendSuccess, sendError } from "@/lib/responseHandler";
 
+// GET user by ID
 export async function GET(req, context) {
   try {
     const { id } = await context.params;
     const userId = Number(id);
 
     if (isNaN(userId)) {
-      return NextResponse.json({ message: "Invalid user ID" }, { status: 400 });
+      return sendError("Invalid user ID", "VALIDATION_ERROR", 400);
     }
 
     const user = await prisma.user.findUnique({
@@ -20,20 +21,23 @@ export async function GET(req, context) {
     });
 
     if (!user) {
-      return NextResponse.json({ message: "User not found" }, { status: 404 });
+      return sendError("User not found", "NOT_FOUND", 404);
     }
 
     const { password, ...safeUser } = user;
-    return NextResponse.json(safeUser);
+    return sendSuccess(safeUser, "User fetched successfully");
   } catch (error) {
     console.error(error);
-    return NextResponse.json(
-      { message: "Internal server error" },
-      { status: 500 }
+    return sendError(
+      "Internal server error",
+      "INTERNAL_ERROR",
+      500,
+      error.message
     );
   }
 }
 
+// UPDATE user
 export async function PUT(req, context) {
   try {
     const { id } = await context.params;
@@ -41,7 +45,7 @@ export async function PUT(req, context) {
     const body = await req.json();
 
     if (isNaN(userId)) {
-      return NextResponse.json({ message: "Invalid user ID" }, { status: 400 });
+      return sendError("Invalid user ID", "VALIDATION_ERROR", 400);
     }
 
     const updatedUser = await prisma.user.update({
@@ -53,38 +57,40 @@ export async function PUT(req, context) {
     });
 
     const { password, ...safeUser } = updatedUser;
-    return NextResponse.json(safeUser);
+    return sendSuccess(safeUser, "User updated successfully");
   } catch (error) {
     console.error(error);
-    return NextResponse.json(
-      { message: "Internal server error" },
-      { status: 500 }
+    return sendError(
+      "Internal server error",
+      "INTERNAL_ERROR",
+      500,
+      error.message
     );
   }
 }
 
+// DELETE user
 export async function DELETE(req, context) {
   try {
     const { id } = await context.params;
     const userId = Number(id);
 
     if (isNaN(userId)) {
-      return NextResponse.json({ message: "Invalid user ID" }, { status: 400 });
+      return sendError("Invalid user ID", "VALIDATION_ERROR", 400);
     }
 
     await prisma.user.delete({
       where: { id: userId },
     });
 
-    return NextResponse.json(
-      { message: "User deleted successfully" },
-      { status: 200 }
-    );
+    return sendSuccess(null, "User deleted successfully");
   } catch (error) {
     console.error(error);
-    return NextResponse.json(
-      { message: "Internal server error" },
-      { status: 500 }
+    return sendError(
+      "Internal server error",
+      "INTERNAL_ERROR",
+      500,
+      error.message
     );
   }
 }

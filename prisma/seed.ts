@@ -1,12 +1,17 @@
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
 async function main() {
+  const hashedPassword = await bcrypt.hash("password123", 10);
+
+  // Create DONOR user
   const user = await prisma.user.create({
     data: {
       name: "Amit",
       email: "amit@test.com",
+      password: hashedPassword,
       role: "DONOR",
       donor: {
         create: {
@@ -17,6 +22,7 @@ async function main() {
     },
   });
 
+  // Create HOSPITAL + its admin user
   const hospital = await prisma.hospital.create({
     data: {
       name: "City Hospital",
@@ -25,13 +31,14 @@ async function main() {
         create: {
           name: "City Hospital Admin",
           email: "hospital@test.com",
+          password: hashedPassword,
           role: "HOSPITAL",
         },
       },
     },
   });
 
-  // This part of code create Blood Inventory
+  // Create Blood Inventory
   await prisma.bloodInventory.create({
     data: {
       bloodGroup: "O+",

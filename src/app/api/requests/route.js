@@ -1,39 +1,34 @@
-import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { sendSuccess, sendError } from "@/lib/responseHandler";
 
 // GET all blood requests
 export async function GET() {
   try {
     const requests = await prisma.bloodRequest.findMany({
-      include: {
-        user: true,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
+      include: { user: true },
+      orderBy: { createdAt: "desc" },
     });
 
-    return NextResponse.json(requests, { status: 200 });
+    return sendSuccess(requests, "Blood requests fetched successfully");
   } catch (error) {
     console.error("Get requests error:", error);
-    return NextResponse.json(
-      { message: "Internal server error" },
-      { status: 500 }
+    return sendError(
+      "Internal server error",
+      "INTERNAL_ERROR",
+      500,
+      error.message
     );
   }
 }
 
-// CREATE blood request
+// CREATE a new blood request
 export async function POST(req) {
   try {
     const body = await req.json();
     const { userId, bloodGroup, units } = body;
 
     if (!userId || !bloodGroup || units == null) {
-      return NextResponse.json(
-        { message: "Missing required fields" },
-        { status: 400 }
-      );
+      return sendError("Missing required fields", "VALIDATION_ERROR", 400);
     }
 
     const request = await prisma.bloodRequest.create({
@@ -45,12 +40,14 @@ export async function POST(req) {
       },
     });
 
-    return NextResponse.json(request, { status: 201 });
+    return sendSuccess(request, "Blood request created successfully", 201);
   } catch (error) {
     console.error("Create request error:", error);
-    return NextResponse.json(
-      { message: "Internal server error" },
-      { status: 500 }
+    return sendError(
+      "Internal server error",
+      "INTERNAL_ERROR",
+      500,
+      error.message
     );
   }
 }
