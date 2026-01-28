@@ -1,13 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { sendSuccess, sendError } from "@/lib/responseHandler";
+import { updateUserSchema } from "@/lib/validators/user.schema";
 
 // GET user by ID
 export async function GET(req, context) {
   try {
-    const { id } = await context.params;
-    const userId = Number(id);
+    const userId = Number(context.params.id);
 
-    if (isNaN(userId)) {
+    if (!Number.isInteger(userId)) {
       return sendError("Invalid user ID", "VALIDATION_ERROR", 400);
     }
 
@@ -28,54 +28,49 @@ export async function GET(req, context) {
     return sendSuccess(safeUser, "User fetched successfully");
   } catch (error) {
     console.error(error);
-    return sendError(
-      "Internal server error",
-      "INTERNAL_ERROR",
-      500,
-      error.message
-    );
+    return sendError("Internal server error", "INTERNAL_ERROR", 500);
   }
 }
 
 // UPDATE user
 export async function PUT(req, context) {
   try {
-    const { id } = await context.params;
-    const userId = Number(id);
+    const userId = Number(context.params.id);
+
+    if (!Number.isInteger(userId)) {
+      return sendError("Invalid user ID", "VALIDATION_ERROR", 400);
+    }
+
     const body = await req.json();
 
-    if (isNaN(userId)) {
-      return sendError("Invalid user ID", "VALIDATION_ERROR", 400);
+    const parsedBody = updateUserSchema.safeParse(body);
+    if (!parsedBody.success) {
+      return sendError(
+        parsedBody.error.errors[0].message,
+        "VALIDATION_ERROR",
+        400
+      );
     }
 
     const updatedUser = await prisma.user.update({
       where: { id: userId },
-      data: {
-        name: body.name,
-        email: body.email,
-      },
+      data: parsedBody.data,
     });
 
     const { password, ...safeUser } = updatedUser;
     return sendSuccess(safeUser, "User updated successfully");
   } catch (error) {
     console.error(error);
-    return sendError(
-      "Internal server error",
-      "INTERNAL_ERROR",
-      500,
-      error.message
-    );
+    return sendError("Internal server error", "INTERNAL_ERROR", 500);
   }
 }
 
 // DELETE user
 export async function DELETE(req, context) {
   try {
-    const { id } = await context.params;
-    const userId = Number(id);
+    const userId = Number(context.params.id);
 
-    if (isNaN(userId)) {
+    if (!Number.isInteger(userId)) {
       return sendError("Invalid user ID", "VALIDATION_ERROR", 400);
     }
 
@@ -86,11 +81,6 @@ export async function DELETE(req, context) {
     return sendSuccess(null, "User deleted successfully");
   } catch (error) {
     console.error(error);
-    return sendError(
-      "Internal server error",
-      "INTERNAL_ERROR",
-      500,
-      error.message
-    );
+    return sendError("Internal server error", "INTERNAL_ERROR", 500);
   }
 }

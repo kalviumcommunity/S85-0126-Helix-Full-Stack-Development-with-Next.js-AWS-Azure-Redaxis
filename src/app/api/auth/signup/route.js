@@ -1,15 +1,22 @@
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/hash";
 import { sendSuccess, sendError } from "@/lib/responseHandler";
+import { signupSchema } from "@/lib/validators/auth.schema";
 
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { name, email, password, role, bloodGroup, city } = body;
 
-    if (!name || !email || !password || !role) {
-      return sendError("Missing required fields", "VALIDATION_ERROR", 400);
+    const parsedBody = signupSchema.safeParse(body);
+    if (!parsedBody.success) {
+      return sendError(
+        parsedBody.error.errors[0].message,
+        "VALIDATION_ERROR",
+        400
+      );
     }
+
+    const { name, email, password, role, bloodGroup, city } = parsedBody.data;
 
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
@@ -37,18 +44,16 @@ export async function POST(req) {
               }
             : undefined,
       },
-      include: { donor: true, hospital: true },
+      include: {
+        donor: true,
+        hospital: true,
+      },
     });
 
     const { password: _, ...safeUser } = user;
     return sendSuccess(safeUser, "User created successfully", 201);
   } catch (error) {
     console.error("Signup error:", error);
-    return sendError(
-      "Internal server error",
-      "INTERNAL_ERROR",
-      500,
-      error.message
-    );
+    return sendError("Internal server error", "INTERNAL_ERROR", 500);
   }
 }
