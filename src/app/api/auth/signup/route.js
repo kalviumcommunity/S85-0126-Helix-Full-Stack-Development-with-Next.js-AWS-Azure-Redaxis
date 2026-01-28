@@ -1,29 +1,19 @@
-import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/hash";
+import { sendSuccess, sendError } from "@/lib/responseHandler";
 
 export async function POST(req) {
   try {
     const body = await req.json();
-
     const { name, email, password, role, bloodGroup, city } = body;
 
     if (!name || !email || !password || !role) {
-      return NextResponse.json(
-        { message: "Missing required fields" },
-        { status: 400 }
-      );
+      return sendError("Missing required fields", "VALIDATION_ERROR", 400);
     }
 
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-    });
-
+    const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
-      return NextResponse.json(
-        { message: "User already exists" },
-        { status: 409 }
-      );
+      return sendError("User already exists", "CONFLICT_ERROR", 409);
     }
 
     const hashedPassword = await hashPassword(password);
@@ -37,34 +27,28 @@ export async function POST(req) {
         donor:
           role === "DONOR"
             ? {
-                create: {
-                  bloodGroup,
-                  city,
-                },
+                create: { bloodGroup, city },
               }
             : undefined,
         hospital:
           role === "HOSPITAL"
             ? {
-                create: {
-                  name,
-                  city,
-                },
+                create: { name, city },
               }
             : undefined,
       },
-      include: {
-        donor: true,
-        hospital: true,
-      },
+      include: { donor: true, hospital: true },
     });
 
-    return NextResponse.json(user, { status: 201 });
+    const { password: _, ...safeUser } = user;
+    return sendSuccess(safeUser, "User created successfully", 201);
   } catch (error) {
     console.error("Signup error:", error);
-    return NextResponse.json(
-      { message: "Internal server error" },
-      { status: 500 }
+    return sendError(
+      "Internal server error",
+      "INTERNAL_ERROR",
+      500,
+      error.message
     );
   }
 }

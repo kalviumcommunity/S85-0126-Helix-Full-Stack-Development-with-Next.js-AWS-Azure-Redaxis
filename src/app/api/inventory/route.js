@@ -1,34 +1,33 @@
-import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { sendSuccess, sendError } from "@/lib/responseHandler";
 
+// GET all inventories
 export async function GET() {
   try {
-    const inventory = await prisma.bloodInventory.findMany({
-      include: {
-        hospital: true,
-      },
+    const inventories = await prisma.bloodInventory.findMany({
+      include: { hospital: true },
     });
 
-    return NextResponse.json(inventory, { status: 200 });
+    return sendSuccess(inventories, "Inventories fetched successfully");
   } catch (error) {
-    console.error("Get inventory error:", error);
-    return NextResponse.json(
-      { message: "Internal server error" },
-      { status: 500 }
+    console.error("Get inventories error:", error);
+    return sendError(
+      "Internal server error",
+      "INTERNAL_ERROR",
+      500,
+      error.message
     );
   }
 }
 
+// CREATE new inventory
 export async function POST(req) {
   try {
     const body = await req.json();
     const { hospitalId, bloodGroup, units } = body;
 
     if (!hospitalId || !bloodGroup || units == null) {
-      return NextResponse.json(
-        { message: "Missing required fields" },
-        { status: 400 }
-      );
+      return sendError("Missing required fields", "VALIDATION_ERROR", 400);
     }
 
     const inventory = await prisma.bloodInventory.create({
@@ -39,12 +38,14 @@ export async function POST(req) {
       },
     });
 
-    return NextResponse.json(inventory, { status: 201 });
+    return sendSuccess(inventory, "Inventory created successfully", 201);
   } catch (error) {
     console.error("Create inventory error:", error);
-    return NextResponse.json(
-      { message: "Internal server error" },
-      { status: 500 }
+    return sendError(
+      "Internal server error",
+      "INTERNAL_ERROR",
+      500,
+      error.message
     );
   }
 }
