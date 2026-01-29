@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/hash";
+import { signToken } from "@/lib/jwt";
 import { sendSuccess, sendError } from "@/lib/responseHandler";
 import { signupSchema } from "@/lib/validators/auth.schema";
 
@@ -31,18 +32,8 @@ export async function POST(req) {
         email,
         password: hashedPassword,
         role,
-        donor:
-          role === "DONOR"
-            ? {
-                create: { bloodGroup, city },
-              }
-            : undefined,
-        hospital:
-          role === "HOSPITAL"
-            ? {
-                create: { name, city },
-              }
-            : undefined,
+        donor: role === "DONOR" ? { create: { bloodGroup, city } } : undefined,
+        hospital: role === "HOSPITAL" ? { create: { name, city } } : undefined,
       },
       include: {
         donor: true,
@@ -50,8 +41,23 @@ export async function POST(req) {
       },
     });
 
+    // 🔐 Auto-login token
+    const token = signToken({
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
+
     const { password: _, ...safeUser } = user;
-    return sendSuccess(safeUser, "User created successfully", 201);
+
+    return sendSuccess(
+      {
+        user: safeUser,
+        token,
+      },
+      "User created successfully",
+      201
+    );
   } catch (error) {
     console.error("Signup error:", error);
     return sendError("Internal server error", "INTERNAL_ERROR", 500);

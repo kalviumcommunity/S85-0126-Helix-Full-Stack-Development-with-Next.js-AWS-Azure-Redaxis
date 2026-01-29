@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { comparePassword } from "@/lib/hash";
+import { signToken } from "@/lib/jwt";
 import { sendSuccess, sendError } from "@/lib/responseHandler";
 import { loginSchema } from "@/lib/validators/auth.schema";
 
@@ -35,8 +36,22 @@ export async function POST(req) {
       return sendError("Invalid credentials", "AUTH_ERROR", 401);
     }
 
+    // 🔐 JWT payload (keep it minimal)
+    const token = signToken({
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
+
     const { password: _, ...safeUser } = user;
-    return sendSuccess(safeUser, "Login successful");
+
+    return sendSuccess(
+      {
+        user: safeUser,
+        token,
+      },
+      "Login successful"
+    );
   } catch (error) {
     console.error("Login error:", error);
     return sendError("Internal server error", "INTERNAL_ERROR", 500);
