@@ -2,9 +2,15 @@ import { prisma } from "@/lib/prisma";
 import { sendSuccess, sendError } from "@/lib/responseHandler";
 import { createInventorySchema } from "@/lib/validators/inventory.schema";
 
-// GET all inventories
-export async function GET() {
+// GET all inventories (HOSPITAL, NGO)
+export async function GET(req) {
   try {
+    const role = req.headers.get("x-user-role");
+
+    if (!["HOSPITAL", "NGO"].includes(role)) {
+      return sendError("Access denied", "FORBIDDEN", 403);
+    }
+
     const inventories = await prisma.bloodInventory.findMany({
       include: { hospital: true },
     });
@@ -16,12 +22,19 @@ export async function GET() {
   }
 }
 
-// CREATE new inventory
+// CREATE inventory (HOSPITAL only, own hospital)
 export async function POST(req) {
   try {
-    const body = await req.json();
+    const role = req.headers.get("x-user-role");
+    const userId = Number(req.headers.get("x-user-id"));
 
+    if (role !== "HOSPITAL") {
+      return sendError("Only hospitals can create inventory", "FORBIDDEN", 403);
+    }
+
+    const body = await req.json();
     const parsedBody = createInventorySchema.safeParse(body);
+
     if (!parsedBody.success) {
       return sendError(
         parsedBody.error.errors[0].message,
@@ -31,6 +44,19 @@ export async function POST(req) {
     }
 
     const { hospitalId, bloodGroup, units } = parsedBody.data;
+
+    // 🔒 Ownership check
+    const hospital = await prisma.hospital.findUnique({
+      where: { userId },
+    });
+
+    if (!hospital || hospital.id !== hospitalId) {
+      return sendError(
+        "You can only create inventory for your own hospital",
+        "FORBIDDEN",
+        403
+      );
+    }
 
     const inventory = await prisma.bloodInventory.create({
       data: {

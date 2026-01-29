@@ -6,8 +6,8 @@ const prisma = new PrismaClient();
 async function main() {
   const hashedPassword = await bcrypt.hash("password123", 10);
 
-  // Create DONOR user
-  const user = await prisma.user.create({
+  // Create DONOR user with profile
+  const donorUser = await prisma.user.create({
     data: {
       name: "Amit",
       email: "amit@test.com",
@@ -22,27 +22,40 @@ async function main() {
     },
   });
 
-  // Create HOSPITAL + its admin user
+  // Create HOSPITAL admin user
+  const hospitalAdmin = await prisma.user.create({
+    data: {
+      name: "City Hospital Admin",
+      email: "hospital@test.com",
+      password: hashedPassword,
+      role: "HOSPITAL",
+    },
+  });
+
+  // Create HOSPITAL
   const hospital = await prisma.hospital.create({
     data: {
       name: "City Hospital",
       city: "Delhi",
-      user: {
-        create: {
-          name: "City Hospital Admin",
-          email: "hospital@test.com",
-          password: hashedPassword,
-          role: "HOSPITAL",
-        },
-      },
+      userId: hospitalAdmin.id, // link hospital to admin user
     },
   });
 
-  // Create Blood Inventory
+  // Create Blood Inventory for hospital
   await prisma.bloodInventory.create({
     data: {
       bloodGroup: "O+",
       units: 10,
+      hospitalId: hospital.id,
+    },
+  });
+
+  // Optional: Create a Blood Request
+  await prisma.bloodRequest.create({
+    data: {
+      bloodGroup: "O+",
+      units: 5,
+      status: "PENDING",
       hospitalId: hospital.id,
     },
   });

@@ -2,11 +2,17 @@ import { prisma } from "@/lib/prisma";
 import { sendSuccess, sendError } from "@/lib/responseHandler";
 import { createRequestSchema } from "@/lib/validators/request.schema";
 
-// GET all blood requests
-export async function GET() {
+// GET all blood requests (HOSPITAL, NGO, DONOR)
+export async function GET(req) {
   try {
+    const role = req.headers.get("x-user-role");
+
+    if (!["HOSPITAL", "NGO", "DONOR"].includes(role)) {
+      return sendError("Access denied", "FORBIDDEN", 403);
+    }
+
     const requests = await prisma.bloodRequest.findMany({
-      include: { user: true },
+      include: { hospital: true },
       orderBy: { createdAt: "desc" },
     });
 
@@ -17,25 +23,42 @@ export async function GET() {
   }
 }
 
-// CREATE a new blood request
+// CREATE blood request (HOSPITAL only, own hospital)
 export async function POST(req) {
   try {
-    const body = await req.json();
+    const role = req.headers.get("x-user-role");
+    const userId = Number(req.headers.get("x-user-id"));
 
-    const parsedBody = createRequestSchema.safeParse(body);
-    if (!parsedBody.success) {
-      return sendError(
-        parsedBody.error.errors[0].message,
-        "VALIDATION_ERROR",
-        400
-      );
+    if (role !== "HOSPITAL") {
+      return sendError("Only hospitals can create requests", "FORBIDDEN", 403);
     }
 
-    const { userId, bloodGroup, units } = parsedBody.data;
+    // 🔒 Get hospital owned by this user
+    const hospital = await prisma.hospital.findUnique({ where: { userId } });
+    if (!hospital) {
+      return sendError("Hospital not found", "FORBIDDEN", 403);
+    }
+
+    const body = await req.json();
+
+    // Inject hospital/user info before validation
+    const parsedBody = createRequestSchema.safeParse({
+      ...body,
+      userId, // optional, if your schema requires it
+      hospitalId: hospital.id,
+    });
+
+    if (!parsedBody.success) {
+      const firstError =
+        parsedBody.error?.errors?.[0]?.message || "Invalid input";
+      return sendError(firstError, "VALIDATION_ERROR", 400);
+    }
+
+    const { bloodGroup, units } = parsedBody.data;
 
     const request = await prisma.bloodRequest.create({
       data: {
-        userId,
+        hospitalId: hospital.id,
         bloodGroup,
         units,
         status: "PENDING",

@@ -37,7 +37,7 @@ export async function POST(req) {
     }
 
     // 🔐 JWT payload (keep it minimal)
-    const token = signToken({
+    const token = await signToken({
       id: user.id,
       email: user.email,
       role: user.role,
