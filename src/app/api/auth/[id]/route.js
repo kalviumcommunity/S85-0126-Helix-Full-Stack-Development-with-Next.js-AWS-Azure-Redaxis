@@ -2,21 +2,25 @@ import { prisma } from "@/lib/prisma";
 import { sendSuccess, sendError } from "@/lib/responseHandler";
 import { updateUserSchema } from "@/lib/validators/user.schema";
 
-// GET user by ID
+// GET user by ID (self only)
 export async function GET(req, context) {
   try {
-    const userId = Number(context.params.id);
+    const paramUserId = Number(context.params.id);
+    const tokenUserId = Number(req.headers.get("x-user-id"));
 
-    if (!Number.isInteger(userId)) {
+    if (!Number.isInteger(paramUserId)) {
       return sendError("Invalid user ID", "VALIDATION_ERROR", 400);
     }
 
+    if (paramUserId !== tokenUserId) {
+      return sendError("Access denied", "FORBIDDEN", 403);
+    }
+
     const user = await prisma.user.findUnique({
-      where: { id: userId },
+      where: { id: paramUserId },
       include: {
         donor: true,
         hospital: true,
-        requests: true,
       },
     });
 
@@ -32,18 +36,23 @@ export async function GET(req, context) {
   }
 }
 
-// UPDATE user
+// UPDATE user (self only)
 export async function PUT(req, context) {
   try {
-    const userId = Number(context.params.id);
+    const paramUserId = Number(context.params.id);
+    const tokenUserId = Number(req.headers.get("x-user-id"));
 
-    if (!Number.isInteger(userId)) {
+    if (!Number.isInteger(paramUserId)) {
       return sendError("Invalid user ID", "VALIDATION_ERROR", 400);
     }
 
-    const body = await req.json();
+    if (paramUserId !== tokenUserId) {
+      return sendError("Access denied", "FORBIDDEN", 403);
+    }
 
+    const body = await req.json();
     const parsedBody = updateUserSchema.safeParse(body);
+
     if (!parsedBody.success) {
       return sendError(
         parsedBody.error.errors[0].message,
@@ -53,7 +62,7 @@ export async function PUT(req, context) {
     }
 
     const updatedUser = await prisma.user.update({
-      where: { id: userId },
+      where: { id: paramUserId },
       data: parsedBody.data,
     });
 
@@ -65,17 +74,22 @@ export async function PUT(req, context) {
   }
 }
 
-// DELETE user
+// DELETE user (self only)
 export async function DELETE(req, context) {
   try {
-    const userId = Number(context.params.id);
+    const paramUserId = Number(context.params.id);
+    const tokenUserId = Number(req.headers.get("x-user-id"));
 
-    if (!Number.isInteger(userId)) {
+    if (!Number.isInteger(paramUserId)) {
       return sendError("Invalid user ID", "VALIDATION_ERROR", 400);
     }
 
+    if (paramUserId !== tokenUserId) {
+      return sendError("Access denied", "FORBIDDEN", 403);
+    }
+
     await prisma.user.delete({
-      where: { id: userId },
+      where: { id: paramUserId },
     });
 
     return sendSuccess(null, "User deleted successfully");

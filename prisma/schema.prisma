@@ -17,7 +17,6 @@ model User {
 
   donor     DonorProfile?
   hospital  Hospital?
-  requests  BloodRequest[]
 }
 
 model DonorProfile {
@@ -38,6 +37,7 @@ model Hospital {
 
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   inventory BloodInventory[]
+  request BloodRequest[]
 }
 
 model BloodInventory {
@@ -55,9 +55,9 @@ model BloodRequest {
   units       Int
   status      RequestStatus
   createdAt   DateTime      @default(now())
-  userId      Int
+  hospitalId      Int
 
-  user        User          @relation(fields: [userId], references: [id])
+  hospital    Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
 }
 
 enum UserRole {

@@ -2,10 +2,16 @@ import { prisma } from "@/lib/prisma";
 import { sendSuccess, sendError } from "@/lib/responseHandler";
 import { updateRequestSchema } from "@/lib/validators/request.schema";
 
-// GET BloodRequest by ID
+// GET request by ID (HOSPITAL, NGO, DONOR)
 export async function GET(req, context) {
   try {
-    const requestId = Number(context.params.id);
+    const role = req.headers.get("x-user-role");
+    const params = await context.params;
+    const requestId = Number(params.id);
+
+    if (!["HOSPITAL", "NGO", "DONOR"].includes(role)) {
+      return sendError("Access denied", "FORBIDDEN", 403);
+    }
 
     if (isNaN(requestId)) {
       return sendError("Invalid request ID", "VALIDATION_ERROR", 400);
@@ -13,7 +19,7 @@ export async function GET(req, context) {
 
     const request = await prisma.bloodRequest.findUnique({
       where: { id: requestId },
-      include: { user: true },
+      include: { hospital: true },
     });
 
     if (!request) {
@@ -27,53 +33,58 @@ export async function GET(req, context) {
   }
 }
 
-// UPDATE BloodRequest status
+// UPDATE request status (HOSPITAL, own only)
 export async function PUT(req, context) {
   try {
-    const requestId = Number(context.params.id);
+    const role = req.headers.get("x-user-role");
+    const userId = Number(req.headers.get("x-user-id"));
+    const params = await context.params;
+    const requestId = Number(params.id);
+
+    if (role !== "HOSPITAL")
+      return sendError("Only hospitals can update requests", "FORBIDDEN", 403);
+    if (isNaN(requestId))
+      return sendError("Invalid request ID", "VALIDATION_ERROR", 400);
+
     const body = await req.json();
 
-    if (isNaN(requestId)) {
-      return sendError("Invalid request ID", "VALIDATION_ERROR", 400);
-    }
-
+    // Safe validation
     const parsedBody = updateRequestSchema.safeParse(body);
     if (!parsedBody.success) {
-      return sendError(
-        parsedBody.error.errors[0].message,
-        "VALIDATION_ERROR",
-        400
-      );
+      console.log("Zod error:", parsedBody.error.format());
+      const firstError =
+        parsedBody.error?.errors?.[0]?.message || "Invalid input";
+      return sendError(firstError, "VALIDATION_ERROR", 400);
     }
 
+    // Fetch request + hospital
+    const request = await prisma.bloodRequest.findUnique({
+      where: { id: requestId },
+      include: { hospital: true },
+    });
+
+    if (!request) return sendError("Request not found", "NOT_FOUND", 404);
+    if (!request.hospital || request.hospital.userId !== userId)
+      return sendError(
+        "You can only update your own requests",
+        "FORBIDDEN",
+        403
+      );
+
+    // Update request
     const updatedRequest = await prisma.bloodRequest.update({
       where: { id: requestId },
       data: parsedBody.data,
     });
 
     return sendSuccess(updatedRequest, "Request updated successfully");
-  } catch (error) {
-    console.error("Update request error:", error);
+  } catch (err) {
+    console.error("Update request error:", err);
     return sendError("Internal server error", "INTERNAL_ERROR", 500);
   }
 }
 
-// DELETE BloodRequest
-export async function DELETE(req, context) {
-  try {
-    const requestId = Number(context.params.id);
-
-    if (isNaN(requestId)) {
-      return sendError("Invalid request ID", "VALIDATION_ERROR", 400);
-    }
-
-    await prisma.bloodRequest.delete({
-      where: { id: requestId },
-    });
-
-    return sendSuccess(null, "Request deleted successfully");
-  } catch (error) {
-    console.error("Delete request error:", error);
-    return sendError("Internal server error", "INTERNAL_ERROR", 500);
-  }
+// DELETE request (blocked by design)
+export async function DELETE() {
+  return sendError("Deleting requests is not allowed", "FORBIDDEN", 403);
 }

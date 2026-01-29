@@ -42,7 +42,7 @@ export async function POST(req) {
     });
 
     // 🔐 Auto-login token
-    const token = signToken({
+    const token = await signToken({
       id: user.id,
       email: user.email,
       role: user.role,
