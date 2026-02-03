@@ -11,11 +11,12 @@ export async function POST(req) {
 
     const parsedBody = loginSchema.safeParse(body);
     if (!parsedBody.success) {
-      return sendError(
-        parsedBody.error.errors[0].message,
-        "VALIDATION_ERROR",
-        400
+      const error = new Error(
+        parsedBody.error?.errors?.[0]?.message || "Invalid input"
       );
+      error.status = 400;
+      error.type = "VALIDATION_ERROR";
+      throw error;
     }
 
     const { email, password } = parsedBody.data;

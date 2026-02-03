@@ -3,7 +3,26 @@ import { sendSuccess, sendError } from "@/lib/responseHandler";
 import { createInventorySchema } from "@/lib/validators/inventory.schema";
 import { handleError } from "@/lib/errorHandler";
 
-// GET all inventories (HOSPITAL, NGO)
+/* =========================
+   Helpers
+========================= */
+function parseIntOrThrow(value, fieldName) {
+  const num = Number(value);
+
+  if (!Number.isInteger(num)) {
+    const error = new Error(`Invalid ${fieldName}`);
+    error.status = 400;
+    error.type = "VALIDATION_ERROR";
+    throw error;
+  }
+
+  return num;
+}
+
+/* =========================
+   GET all inventories
+   (HOSPITAL, NGO)
+========================= */
 export async function GET(req) {
   try {
     const role = req.headers.get("x-user-role");
@@ -22,11 +41,14 @@ export async function GET(req) {
   }
 }
 
-// CREATE inventory (HOSPITAL only, own hospital)
+/* =========================
+   CREATE inventory
+   (HOSPITAL → own hospital)
+========================= */
 export async function POST(req) {
   try {
     const role = req.headers.get("x-user-role");
-    const userId = Number(req.headers.get("x-user-id"));
+    const userId = parseIntOrThrow(req.headers.get("x-user-id"), "user ID");
 
     if (role !== "HOSPITAL") {
       return sendError("Only hospitals can create inventory", "FORBIDDEN", 403);
@@ -36,11 +58,12 @@ export async function POST(req) {
     const parsedBody = createInventorySchema.safeParse(body);
 
     if (!parsedBody.success) {
-      return sendError(
-        parsedBody.error.errors[0].message,
-        "VALIDATION_ERROR",
-        400
+      const error = new Error(
+        parsedBody.error.errors[0]?.message || "Invalid input"
       );
+      error.status = 400;
+      error.type = "VALIDATION_ERROR";
+      throw error;
     }
 
     const { hospitalId, bloodGroup, units } = parsedBody.data;

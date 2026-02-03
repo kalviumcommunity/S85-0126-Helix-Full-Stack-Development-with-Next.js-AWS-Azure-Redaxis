@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { sendSuccess, sendError } from "@/lib/responseHandler";
 import { createRequestSchema } from "@/lib/validators/request.schema";
 import { handleError } from "@/lib/errorHandler";
+import redis from "@/lib/redis";
 
 // GET all blood requests (HOSPITAL, NGO, DONOR)
 export async function GET(req) {
@@ -12,10 +13,28 @@ export async function GET(req) {
       return sendError("Access denied", "FORBIDDEN", 403);
     }
 
+    const cacheKey = "blood_requests:all";
+
+    // 🔍 1. Check Redis cache
+    const cachedRequests = await redis.get(cacheKey);
+    if (cachedRequests) {
+      console.log("⚡ Cache HIT: blood_requests");
+      return sendSuccess(
+        JSON.parse(cachedRequests),
+        "Blood requests fetched successfully (cached)"
+      );
+    }
+
+    console.log("🐢 Cache MISS: fetching blood requests from DB");
+
+    // 🐘 2. Fetch from DB
     const requests = await prisma.bloodRequest.findMany({
       include: { hospital: true },
       orderBy: { createdAt: "desc" },
     });
+
+    // ⏱ 3. Store in cache (TTL = 60s)
+    await redis.set(cacheKey, JSON.stringify(requests), "EX", 60);
 
     return sendSuccess(requests, "Blood requests fetched successfully");
   } catch (error) {
@@ -62,6 +81,9 @@ export async function POST(req) {
         status: "PENDING",
       },
     });
+
+    // ❌ Invalidate cache after write
+    await redis.del("blood_requests:all");
 
     return sendSuccess(request, "Blood request created successfully", 201);
   } catch (error) {
