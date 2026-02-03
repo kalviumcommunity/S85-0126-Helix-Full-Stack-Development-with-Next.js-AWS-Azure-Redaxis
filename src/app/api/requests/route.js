@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { sendSuccess, sendError } from "@/lib/responseHandler";
 import { createRequestSchema } from "@/lib/validators/request.schema";
+import { handleError } from "@/lib/errorHandler";
 
 // GET all blood requests (HOSPITAL, NGO, DONOR)
 export async function GET(req) {
@@ -18,8 +19,7 @@ export async function GET(req) {
 
     return sendSuccess(requests, "Blood requests fetched successfully");
   } catch (error) {
-    console.error("Get requests error:", error);
-    return sendError("Internal server error", "INTERNAL_ERROR", 500);
+    return handleError(error, "GET /api/requests");
   }
 }
 
@@ -33,7 +33,6 @@ export async function POST(req) {
       return sendError("Only hospitals can create requests", "FORBIDDEN", 403);
     }
 
-    // 🔒 Get hospital owned by this user
     const hospital = await prisma.hospital.findUnique({ where: { userId } });
     if (!hospital) {
       return sendError("Hospital not found", "FORBIDDEN", 403);
@@ -41,10 +40,9 @@ export async function POST(req) {
 
     const body = await req.json();
 
-    // Inject hospital/user info before validation
     const parsedBody = createRequestSchema.safeParse({
       ...body,
-      userId, // optional, if your schema requires it
+      userId,
       hospitalId: hospital.id,
     });
 
@@ -67,7 +65,6 @@ export async function POST(req) {
 
     return sendSuccess(request, "Blood request created successfully", 201);
   } catch (error) {
-    console.error("Create request error:", error);
-    return sendError("Internal server error", "INTERNAL_ERROR", 500);
+    return handleError(error, "POST /api/requests");
   }
 }

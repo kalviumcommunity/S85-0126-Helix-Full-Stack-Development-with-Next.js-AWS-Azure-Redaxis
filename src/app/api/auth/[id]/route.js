@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { sendSuccess, sendError } from "@/lib/responseHandler";
 import { updateUserSchema } from "@/lib/validators/user.schema";
+import { handleError } from "@/lib/errorHandler";
 
 // GET user by ID (self only)
 export async function GET(req, context) {
@@ -31,8 +32,7 @@ export async function GET(req, context) {
     const { password, ...safeUser } = user;
     return sendSuccess(safeUser, "User fetched successfully");
   } catch (error) {
-    console.error(error);
-    return sendError("Internal server error", "INTERNAL_ERROR", 500);
+    return handleError(error, "GET /api/users/[id]");
   }
 }
 
@@ -69,8 +69,7 @@ export async function PUT(req, context) {
     const { password, ...safeUser } = updatedUser;
     return sendSuccess(safeUser, "User updated successfully");
   } catch (error) {
-    console.error(error);
-    return sendError("Internal server error", "INTERNAL_ERROR", 500);
+    return handleError(error, "PUT /api/users/[id]");
   }
 }
 
@@ -94,7 +93,6 @@ export async function DELETE(req, context) {
 
     return sendSuccess(null, "User deleted successfully");
   } catch (error) {
-    console.error(error);
-    return sendError("Internal server error", "INTERNAL_ERROR", 500);
+    return handleError(error, "DELETE /api/users/[id]");
   }
 }

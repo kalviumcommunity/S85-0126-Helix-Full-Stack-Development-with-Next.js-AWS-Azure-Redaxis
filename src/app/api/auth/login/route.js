@@ -3,6 +3,7 @@ import { comparePassword } from "@/lib/hash";
 import { signToken } from "@/lib/jwt";
 import { sendSuccess, sendError } from "@/lib/responseHandler";
 import { loginSchema } from "@/lib/validators/auth.schema";
+import { handleError } from "@/lib/errorHandler";
 
 export async function POST(req) {
   try {
@@ -36,7 +37,6 @@ export async function POST(req) {
       return sendError("Invalid credentials", "AUTH_ERROR", 401);
     }
 
-    // 🔐 JWT payload (keep it minimal)
     const token = await signToken({
       id: user.id,
       email: user.email,
@@ -53,7 +53,6 @@ export async function POST(req) {
       "Login successful"
     );
   } catch (error) {
-    console.error("Login error:", error);
-    return sendError("Internal server error", "INTERNAL_ERROR", 500);
+    return handleError(error, "POST /api/auth/login");
   }
 }
