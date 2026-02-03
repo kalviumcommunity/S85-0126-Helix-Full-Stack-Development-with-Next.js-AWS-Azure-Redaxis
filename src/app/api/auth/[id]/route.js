@@ -3,15 +3,30 @@ import { sendSuccess, sendError } from "@/lib/responseHandler";
 import { updateUserSchema } from "@/lib/validators/user.schema";
 import { handleError } from "@/lib/errorHandler";
 
-// GET user by ID (self only)
+/* =========================
+   Helpers
+========================= */
+function parseIntOrThrow(value, fieldName) {
+  const num = Number(value);
+  if (!Number.isInteger(num)) {
+    const error = new Error(`Invalid ${fieldName}`);
+    error.status = 400;
+    error.type = "VALIDATION_ERROR";
+    throw error;
+  }
+  return num;
+}
+
+/* =========================
+   GET user by ID (self only)
+========================= */
 export async function GET(req, context) {
   try {
-    const paramUserId = Number(context.params.id);
-    const tokenUserId = Number(req.headers.get("x-user-id"));
-
-    if (!Number.isInteger(paramUserId)) {
-      return sendError("Invalid user ID", "VALIDATION_ERROR", 400);
-    }
+    const paramUserId = parseIntOrThrow(context.params.id, "user ID");
+    const tokenUserId = parseIntOrThrow(
+      req.headers.get("x-user-id"),
+      "user ID"
+    );
 
     if (paramUserId !== tokenUserId) {
       return sendError("Access denied", "FORBIDDEN", 403);
@@ -36,15 +51,16 @@ export async function GET(req, context) {
   }
 }
 
-// UPDATE user (self only)
+/* =========================
+   UPDATE user (self only)
+========================= */
 export async function PUT(req, context) {
   try {
-    const paramUserId = Number(context.params.id);
-    const tokenUserId = Number(req.headers.get("x-user-id"));
-
-    if (!Number.isInteger(paramUserId)) {
-      return sendError("Invalid user ID", "VALIDATION_ERROR", 400);
-    }
+    const paramUserId = parseIntOrThrow(context.params.id, "user ID");
+    const tokenUserId = parseIntOrThrow(
+      req.headers.get("x-user-id"),
+      "user ID"
+    );
 
     if (paramUserId !== tokenUserId) {
       return sendError("Access denied", "FORBIDDEN", 403);
@@ -54,11 +70,12 @@ export async function PUT(req, context) {
     const parsedBody = updateUserSchema.safeParse(body);
 
     if (!parsedBody.success) {
-      return sendError(
-        parsedBody.error.errors[0].message,
-        "VALIDATION_ERROR",
-        400
+      const error = new Error(
+        parsedBody.error?.errors?.[0]?.message || "Invalid input"
       );
+      error.status = 400;
+      error.type = "VALIDATION_ERROR";
+      throw error;
     }
 
     const updatedUser = await prisma.user.update({
@@ -73,15 +90,16 @@ export async function PUT(req, context) {
   }
 }
 
-// DELETE user (self only)
+/* =========================
+   DELETE user (self only)
+========================= */
 export async function DELETE(req, context) {
   try {
-    const paramUserId = Number(context.params.id);
-    const tokenUserId = Number(req.headers.get("x-user-id"));
-
-    if (!Number.isInteger(paramUserId)) {
-      return sendError("Invalid user ID", "VALIDATION_ERROR", 400);
-    }
+    const paramUserId = parseIntOrThrow(context.params.id, "user ID");
+    const tokenUserId = parseIntOrThrow(
+      req.headers.get("x-user-id"),
+      "user ID"
+    );
 
     if (paramUserId !== tokenUserId) {
       return sendError("Access denied", "FORBIDDEN", 403);
