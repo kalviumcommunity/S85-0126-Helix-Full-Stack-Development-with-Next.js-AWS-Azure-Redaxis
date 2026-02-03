@@ -3,6 +3,7 @@ import { hashPassword } from "@/lib/hash";
 import { signToken } from "@/lib/jwt";
 import { sendSuccess, sendError } from "@/lib/responseHandler";
 import { signupSchema } from "@/lib/validators/auth.schema";
+import { handleError } from "@/lib/errorHandler";
 
 export async function POST(req) {
   try {
@@ -41,7 +42,6 @@ export async function POST(req) {
       },
     });
 
-    // 🔐 Auto-login token
     const token = await signToken({
       id: user.id,
       email: user.email,
@@ -59,7 +59,6 @@ export async function POST(req) {
       201
     );
   } catch (error) {
-    console.error("Signup error:", error);
-    return sendError("Internal server error", "INTERNAL_ERROR", 500);
+    return handleError(error, "POST /api/auth/signup");
   }
 }

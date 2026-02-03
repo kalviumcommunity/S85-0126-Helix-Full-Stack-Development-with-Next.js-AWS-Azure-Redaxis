@@ -1,12 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { sendSuccess, sendError } from "@/lib/responseHandler";
 import { updateInventorySchema } from "@/lib/validators/inventory.schema";
+import { handleError } from "@/lib/errorHandler";
 
 // GET inventory by ID (HOSPITAL, NGO)
 export async function GET(req, context) {
   try {
     const role = req.headers.get("x-user-role");
-    const params = await context.params;
+    const params = context.params;
     const inventoryId = Number(params.id);
 
     if (!["HOSPITAL", "NGO"].includes(role)) {
@@ -28,8 +29,7 @@ export async function GET(req, context) {
 
     return sendSuccess(inventory, "Inventory fetched successfully");
   } catch (error) {
-    console.error("Get inventory error:", error);
-    return sendError("Internal server error", "INTERNAL_ERROR", 500);
+    return handleError(error, "GET /api/inventory/[id]");
   }
 }
 
@@ -38,7 +38,7 @@ export async function PUT(req, context) {
   try {
     const role = req.headers.get("x-user-role");
     const userId = Number(req.headers.get("x-user-id"));
-    const params = await context.params;
+    const params = context.params;
     const inventoryId = Number(params.id);
 
     if (role !== "HOSPITAL") {
@@ -76,8 +76,7 @@ export async function PUT(req, context) {
 
     return sendSuccess(updatedInventory, "Inventory updated successfully");
   } catch (error) {
-    console.error("Update inventory error:", error);
-    return sendError("Internal server error", "INTERNAL_ERROR", 500);
+    return handleError(error, "PUT /api/inventory/[id]");
   }
 }
 
@@ -86,7 +85,7 @@ export async function DELETE(req, context) {
   try {
     const role = req.headers.get("x-user-role");
     const userId = Number(req.headers.get("x-user-id"));
-    const params = await context.params;
+    const params = context.params;
     const inventoryId = Number(params.id);
 
     if (role !== "HOSPITAL") {
@@ -112,7 +111,6 @@ export async function DELETE(req, context) {
 
     return sendSuccess(null, "Inventory deleted successfully");
   } catch (error) {
-    console.error("Delete inventory error:", error);
-    return sendError("Internal server error", "INTERNAL_ERROR", 500);
+    return handleError(error, "DELETE /api/inventory/[id]");
   }
 }

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { sendSuccess, sendError } from "@/lib/responseHandler";
 import { createInventorySchema } from "@/lib/validators/inventory.schema";
+import { handleError } from "@/lib/errorHandler";
 
 // GET all inventories (HOSPITAL, NGO)
 export async function GET(req) {
@@ -17,8 +18,7 @@ export async function GET(req) {
 
     return sendSuccess(inventories, "Inventories fetched successfully");
   } catch (error) {
-    console.error("Get inventories error:", error);
-    return sendError("Internal server error", "INTERNAL_ERROR", 500);
+    return handleError(error, "GET /api/inventory");
   }
 }
 
@@ -45,7 +45,6 @@ export async function POST(req) {
 
     const { hospitalId, bloodGroup, units } = parsedBody.data;
 
-    // 🔒 Ownership check
     const hospital = await prisma.hospital.findUnique({
       where: { userId },
     });
@@ -68,7 +67,6 @@ export async function POST(req) {
 
     return sendSuccess(inventory, "Inventory created successfully", 201);
   } catch (error) {
-    console.error("Create inventory error:", error);
-    return sendError("Internal server error", "INTERNAL_ERROR", 500);
+    return handleError(error, "POST /api/inventory");
   }
 }
