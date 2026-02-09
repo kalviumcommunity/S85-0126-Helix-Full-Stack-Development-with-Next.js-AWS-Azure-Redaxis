@@ -1,15 +1,23 @@
+import { Nav } from "@/components/layout/Nav";
+
 export const metadata = {
-  title: "About | Blood Donation & Inventory Platform",
+  title: "About | RedAxis — Blood Donation & Inventory Platform",
   description:
     "A real-time blood donation and inventory management platform connecting donors, hospitals, and NGOs across India.",
 };
 
 export default function AboutPage() {
   return (
-    <main className="min-h-screen px-6 py-12 md:px-16 lg:px-32 bg-white text-gray-800">
+    <>
+      <Nav />
+      <main
+        className="min-h-screen px-6 pt-28 pb-20 md:px-12 lg:px-20"
+        style={{ background: "var(--gradient-hero)" }}
+      >
+        <div className="mx-auto max-w-3xl text-[var(--foreground)]">
       {/* Hero Section */}
       <section className="mb-12">
-        <h1 className="text-4xl font-bold mb-4 text-red-600">
+        <h1 className="text-4xl font-bold mb-4 text-[var(--accent-deep)]">
           About the Platform
         </h1>
         <p className="text-lg leading-relaxed max-w-3xl">
@@ -70,6 +78,8 @@ export default function AboutPage() {
           and more humane healthcare support system for India.
         </p>
       </section>
+        </div>
     </main>
+    </>
   );
 }

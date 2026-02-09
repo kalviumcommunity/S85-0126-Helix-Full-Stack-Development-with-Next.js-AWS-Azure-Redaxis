@@ -1,48 +1,62 @@
 import { NextResponse } from "next/server";
 import { verifyToken } from "@/lib/jwt";
 
-const JWT_SECRET = process.env.JWT_SECRET;
+const AUTH_COOKIE_NAME = "auth_token";
 
-// Public routes (no auth needed)
-const PUBLIC_ROUTES = ["/api/auth/login", "/api/auth/signup"];
-
-// Protected API prefixes
-const PROTECTED_ROUTES = [
-  "/api/inventory",
-  "/api/requests",
-  "/api/auth", // for /api/auth/[id]
-];
+// Public API routes (no auth needed)
+const PUBLIC_API_ROUTES = ["/api/auth/login", "/api/auth/signup"];
 
 export async function middleware(req) {
   const { pathname } = req.nextUrl;
+  const isApiRoute = pathname.startsWith("/api");
 
-  // ✅ Allow public routes
-  if (PUBLIC_ROUTES.some((route) => pathname.startsWith(route))) {
+  // Allow public auth APIs without a token
+  if (
+    isApiRoute &&
+    PUBLIC_API_ROUTES.some((route) => pathname.startsWith(route))
+  ) {
     return NextResponse.next();
   }
 
-  // ✅ Only guard protected API routes
-  if (!PROTECTED_ROUTES.some((route) => pathname.startsWith(route))) {
-    return NextResponse.next();
+  const token = req.cookies.get(AUTH_COOKIE_NAME)?.value;
+
+  // No token → reject APIs, redirect protected pages
+  if (!token) {
+    if (isApiRoute) {
+      return NextResponse.json(
+        { success: false, message: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
+    const loginUrl = new URL("/login", req.url);
+    loginUrl.searchParams.set("next", pathname);
+    return NextResponse.redirect(loginUrl);
   }
-
-  const authHeader = req.headers.get("authorization");
-
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return NextResponse.json(
-      { success: false, message: "Authorization token missing" },
-      { status: 401 }
-    );
-  }
-
-  const token = authHeader.split(" ")[1];
 
   try {
     const decoded = await verifyToken(token);
+
+    const role = decoded.role;
+    const userId = decoded.id;
+
     // Attach user info for downstream APIs
     const requestHeaders = new Headers(req.headers);
-    requestHeaders.set("x-user-id", String(decoded.id));
-    requestHeaders.set("x-user-role", decoded.role);
+    if (userId) requestHeaders.set("x-user-id", String(userId));
+    if (role) requestHeaders.set("x-user-role", role);
+
+    // Role-based page protection
+    if (pathname.startsWith("/donor") && role !== "DONOR") {
+      return NextResponse.redirect(new URL(`/${role.toLowerCase()}`, req.url));
+    }
+
+    if (pathname.startsWith("/hospital") && role !== "HOSPITAL") {
+      return NextResponse.redirect(new URL(`/${role.toLowerCase()}`, req.url));
+    }
+
+    if (pathname.startsWith("/ngo") && role !== "NGO") {
+      return NextResponse.redirect(new URL(`/${role.toLowerCase()}`, req.url));
+    }
 
     return NextResponse.next({
       request: {
@@ -50,14 +64,26 @@ export async function middleware(req) {
       },
     });
   } catch (error) {
-    return NextResponse.json(
-      { success: false, message: "Invalid or expired token" },
-      { status: 403 }
-    );
+    if (isApiRoute) {
+      return NextResponse.json(
+        { success: false, message: "Invalid or expired token" },
+        { status: 403 }
+      );
+    }
+
+    const loginUrl = new URL("/login", req.url);
+    loginUrl.searchParams.set("next", pathname);
+    return NextResponse.redirect(loginUrl);
   }
 }
 
-// Apply middleware only to API routes
+// Apply middleware to API and protected app routes
 export const config = {
-  matcher: ["/api/:path*"],
+  matcher: [
+    "/api/:path*",
+    "/donor/:path*",
+    "/hospital/:path*",
+    "/ngo/:path*",
+    "/profile",
+  ],
 };

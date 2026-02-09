@@ -5,6 +5,8 @@ import { sendSuccess, sendError } from "@/lib/responseHandler";
 import { loginSchema } from "@/lib/validators/auth.schema";
 import { handleError } from "@/lib/errorHandler";
 
+const AUTH_COOKIE_NAME = "auth_token";
+
 export async function POST(req) {
   try {
     const body = await req.json();
@@ -46,13 +48,24 @@ export async function POST(req) {
 
     const { password: _, ...safeUser } = user;
 
-    return sendSuccess(
+    const response = sendSuccess(
       {
         user: safeUser,
         token,
       },
       "Login successful"
     );
+
+    // Set httpOnly JWT cookie for authentication
+    response.cookies.set(AUTH_COOKIE_NAME, token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60, // 1 hour
+    });
+
+    return response;
   } catch (error) {
     return handleError(error, "POST /api/auth/login");
   }

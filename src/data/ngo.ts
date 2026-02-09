@@ -1,0 +1,50 @@
+export const globalRequests = [
+  {
+    id: "g-1",
+    hospital: "Apollo Chennai",
+    bloodType: "O-",
+    units: 3,
+    urgency: "critical",
+    location: "Chennai, TN",
+    timeAgo: "12 min ago",
+    photoPlaceholder: true,
+  },
+  {
+    id: "g-2",
+    hospital: "AIIMS Delhi",
+    bloodType: "B-",
+    units: 2,
+    urgency: "high",
+    location: "New Delhi",
+    timeAgo: "28 min ago",
+    photoPlaceholder: true,
+  },
+  {
+    id: "g-3",
+    hospital: "KEM Mumbai",
+    bloodType: "AB-",
+    units: 1,
+    urgency: "medium",
+    location: "Mumbai, MH",
+    timeAgo: "1 hr ago",
+    photoPlaceholder: true,
+  },
+  {
+    id: "g-4",
+    hospital: "Victoria Hospital",
+    bloodType: "A-",
+    units: 4,
+    urgency: "critical",
+    location: "Bengaluru, KA",
+    timeAgo: "2 hr ago",
+    photoPlaceholder: true,
+  },
+];
+
+export const filterOptions = [
+  { id: "all", label: "All" },
+  { id: "critical", label: "Critical" },
+  { id: "high", label: "High" },
+  { id: "medium", label: "Medium" },
+  { id: "location", label: "Near me" },
+];
