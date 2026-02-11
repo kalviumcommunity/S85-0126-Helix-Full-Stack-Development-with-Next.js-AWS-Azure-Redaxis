@@ -1,16 +1,110 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { MapPin, Calendar, Droplets, ArrowRight } from "lucide-react";
 import { Nav } from "@/components/layout/Nav";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { ImagePlaceholder } from "@/components/ui/ImagePlaceholder";
 import { donorProfile, nearbyHospitals } from "@/data/donor";
+import { ToastMessage, ToastViewport } from "@/components/ui/Toast";
+
+type BloodRequest = {
+  id: number;
+  bloodGroup: string;
+  units: number;
+  status?: string;
+  createdAt?: string;
+  hospital?: {
+    id: number;
+    name: string;
+    city?: string;
+  } | null;
+  urgency?: string;
+};
 
 export default function DonorPage() {
+  const [requests, setRequests] = useState<BloodRequest[]>([]);
+  const [loadingRequests, setLoadingRequests] = useState(true);
+  const [requestsError, setRequestsError] = useState<string | null>(null);
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+
+  const pushToast = (toast: Omit<ToastMessage, "id">) => {
+    setToasts((prev) => [
+      ...prev,
+      { ...toast, id: `${Date.now()}-${Math.random()}` },
+    ]);
+  };
+
+  const closeToast = (id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
+
+  const loadRequests = async () => {
+    try {
+      setLoadingRequests(true);
+      setRequestsError(null);
+
+      const res = await fetch("/api/requests", { cache: "no-store" });
+      const data = await res.json();
+
+      if (!res.ok) {
+        const msg = data?.message || "Failed to load requests";
+        throw new Error(msg);
+      }
+
+      setRequests((data?.data ?? []) as BloodRequest[]);
+    } catch (e: any) {
+      setRequestsError(e?.message || "Failed to load requests");
+      pushToast({
+        title: "Could not load requests",
+        description: e?.message || "Please try again.",
+        variant: "error",
+      });
+    } finally {
+      setLoadingRequests(false);
+    }
+  };
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      if (!mounted) return;
+      await loadRequests();
+    })();
+    return () => {
+      mounted = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const requestCards = useMemo(() => {
+    return requests.map((r) => {
+      const location = r.hospital?.city ? r.hospital.city : "—";
+      const created = r.createdAt ? new Date(r.createdAt) : null;
+      const urgencyOrStatus =
+        typeof r.urgency === "string"
+          ? r.urgency
+          : r.status
+            ? r.status
+            : "—";
+
+      return {
+        key: r.id,
+        hospitalName: r.hospital?.name || "Unknown hospital",
+        location,
+        bloodGroup: r.bloodGroup,
+        units: r.units,
+        urgencyOrStatus,
+        createdLabel: created ? created.toLocaleString() : "—",
+      };
+    });
+  }, [requests]);
+
   return (
     <>
       <Nav />
+      <ToastViewport toasts={toasts} onClose={closeToast} />
       <main
         className="min-h-screen px-6 pt-28 pb-20 md:px-12 lg:px-20"
         style={{ background: "var(--gradient-hero)" }}
@@ -136,6 +230,86 @@ export default function DonorPage() {
                 </div>
               </GlassCard>
             ))}
+          </div>
+
+          {/* Blood requests */}
+          <div className="mt-20">
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-bold tracking-tight text-foreground">
+                  Blood requests
+                </h2>
+                <p className="mt-1 text-sm text-(--muted)">
+                  Live requests from hospitals on the network
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={loadRequests}
+                className="rounded-xl border border-[var(--glass-border)] bg-white/70 px-4 py-2 text-sm font-semibold text-(--accent-deep) backdrop-blur transition hover:bg-white/90"
+              >
+                Refresh
+              </button>
+            </div>
+
+            {loadingRequests ? (
+              <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-40 rounded-[var(--radius-lg)] border border-[var(--glass-border)] bg-white/70 shadow-[var(--shadow-soft)] animate-pulse"
+                  />
+                ))}
+              </div>
+            ) : requestsError ? (
+              <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-800">
+                {requestsError}
+              </div>
+            ) : requestCards.length === 0 ? (
+              <div className="mt-6 rounded-2xl border border-[var(--glass-border)] bg-white/70 px-5 py-4 text-sm text-(--muted)">
+                No active requests right now.
+              </div>
+            ) : (
+              <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {requestCards.map((r, i) => (
+                  <GlassCard key={r.key} delay={i * 0.04}>
+                    <div className="p-6">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-lg font-bold text-foreground truncate">
+                            {r.hospitalName}
+                          </p>
+                          <p className="mt-1 text-sm text-(--muted)">
+                            Location:{" "}
+                            <span className="font-medium">{r.location}</span>
+                          </p>
+                        </div>
+                        <span className="inline-flex rounded-xl bg-(--accent-soft) px-3 py-1.5 text-xs font-semibold text-(--accent-deep)">
+                          {r.urgencyOrStatus}
+                        </span>
+                      </div>
+
+                      <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                        <div className="rounded-xl bg-white/70 px-3 py-2">
+                          <p className="text-(--muted)">Blood group needed</p>
+                          <p className="font-bold text-foreground">
+                            {r.bloodGroup}
+                          </p>
+                        </div>
+                        <div className="rounded-xl bg-white/70 px-3 py-2">
+                          <p className="text-(--muted)">Units required</p>
+                          <p className="font-bold text-foreground">{r.units}</p>
+                        </div>
+                      </div>
+
+                      <p className="mt-4 text-xs text-(--muted)">
+                        Created: {r.createdLabel}
+                      </p>
+                    </div>
+                  </GlassCard>
+                ))}
+              </div>
+            )}
           </div>
         </motion.div>
       </main>

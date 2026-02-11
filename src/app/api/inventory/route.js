@@ -66,7 +66,7 @@ export async function POST(req) {
       throw error;
     }
 
-    const { hospitalId, bloodGroup, units } = parsedBody.data;
+    const { hospitalId, bloodGroup, units, expiryDate } = parsedBody.data;
 
     const hospital = await prisma.hospital.findUnique({
       where: { userId },
@@ -85,6 +85,7 @@ export async function POST(req) {
         hospitalId,
         bloodGroup,
         units,
+        expiryDate,
       },
     });
 

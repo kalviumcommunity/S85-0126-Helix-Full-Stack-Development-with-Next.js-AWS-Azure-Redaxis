@@ -45,6 +45,7 @@ model BloodInventory {
   bloodGroup  String
   units       Int
   hospitalId  Int
+  expiryDate  DateTime?
 
   hospital    Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
 }
@@ -54,6 +55,7 @@ model BloodRequest {
   bloodGroup  String
   units       Int
   status      RequestStatus
+  urgency     RequestUrgency @default(MEDIUM)
   createdAt   DateTime      @default(now())
   hospitalId      Int
 
@@ -70,4 +72,10 @@ enum RequestStatus {
   PENDING
   FULFILLED
   CANCELLED
+}
+
+enum RequestUrgency {
+  LOW
+  MEDIUM
+  HIGH
 }
