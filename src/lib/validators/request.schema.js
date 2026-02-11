@@ -4,6 +4,7 @@ export const createRequestSchema = z.object({
   userId: z.number().int(),
   bloodGroup: z.string(),
   units: z.number().int().min(1),
+  urgency: z.enum(["LOW", "MEDIUM", "HIGH"]).optional(),
 });
 
 export const updateRequestSchema = z.object({

@@ -71,7 +71,7 @@ export async function POST(req) {
       return sendError(firstError, "VALIDATION_ERROR", 400);
     }
 
-    const { bloodGroup, units } = parsedBody.data;
+    const { bloodGroup, units, urgency } = parsedBody.data;
 
     const request = await prisma.bloodRequest.create({
       data: {
@@ -79,6 +79,7 @@ export async function POST(req) {
         bloodGroup,
         units,
         status: "PENDING",
+        urgency: urgency ?? "MEDIUM",
       },
     });
 
