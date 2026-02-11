@@ -236,3 +236,81 @@ Schema changes are applied using Prisma migrations:
 npx prisma migrate dev
 
 
+--------
+
+🔐 Authentication & Role-Based Access (NEW)
+
+RedAxis now includes a complete authentication system with JWT-based security.
+
+Implemented Features
+
+User Signup (Donor / Hospital / NGO)
+
+Secure Login with hashed passwords
+
+JWT Token generation & verification
+
+Logout functionality
+
+/api/auth/me session validation
+
+Role-Based Route Protection
+
+Role Restrictions
+
+/donor/* → DONOR only
+
+/hospital/* → HOSPITAL only
+
+Unauthenticated users → redirected to /login
+
+🏥 Hospital Inventory Management (NEW)
+
+Hospitals can now manage blood inventory.
+
+Features
+
+Add inventory
+
+Update inventory
+
+Delete inventory
+
+View hospital-specific inventory
+
+Expiry date tracking
+
+Blood group filtering
+
+API Endpoints
+
+GET /api/inventory
+
+POST /api/inventory
+
+PUT /api/inventory/[id]
+
+DELETE /api/inventory/[id]
+
+🩸 Blood Request System (NEW)
+
+Hospitals can create and manage blood requests with:
+
+Urgency levels
+
+Status tracking
+
+Linked hospital ownership
+
+🛡 Middleware Protection
+
+Custom middleware now:
+
+Verifies JWT
+
+Injects user ID & role into headers
+
+Blocks unauthorized access
+
+Protects both API and dashboard routes
+
