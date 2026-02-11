@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight, Check, Download } from "lucide-react";
+import { ArrowRight, Check, BookOpen } from "lucide-react";
 import { Nav } from "@/components/layout/Nav";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { ImagePlaceholder } from "@/components/ui/ImagePlaceholder";
@@ -214,15 +214,19 @@ export default function HomePage() {
                 New to blood donation? Download our guide to understand the
                 process and help patients safely.
               </motion.p>
-              <motion.button
+              <motion.div
                 initial={{ opacity: 0, y: 8 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                className="mt-8 flex items-center gap-2 rounded-2xl bg-[var(--accent)] px-6 py-3.5 font-semibold text-white transition hover:bg-[var(--accent-deep)]"
               >
-                <Download className="h-4 w-4" />
-                Download guide
-              </motion.button>
+                <Link
+                  href="/donor-guide"
+                  className="mt-8 inline-flex items-center gap-2 rounded-xl bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--accent-deep)]"
+                >
+                  <BookOpen className="h-4 w-4" />
+                  Read guide
+                </Link>
+              </motion.div>
             </div>
             <div className="w-full max-w-md flex-shrink-0">
               <img
