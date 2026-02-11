@@ -6,12 +6,7 @@ import { ArrowRight, Check, Download } from "lucide-react";
 import { Nav } from "@/components/layout/Nav";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { ImagePlaceholder } from "@/components/ui/ImagePlaceholder";
-import {
-  heroContent,
-  stats,
-  processSteps,
-  requirements,
-} from "@/data/landing";
+import { heroContent, stats, processSteps, requirements } from "@/data/landing";
 
 export default function HomePage() {
   return (
@@ -22,18 +17,16 @@ export default function HomePage() {
         <section
           className="relative flex min-h-[90vh] flex-col justify-end px-6 pb-20 pt-28 md:flex-row md:items-end md:justify-between md:px-12 md:pb-24 lg:px-20"
           style={{ background: "var(--gradient-hero)" }}
-          
         >
           {/* Background image placeholder — generous empty space */}
           <div className="absolute inset-0 flex items-center justify-end overflow-hidden">
             <div className="absolute right-0 top-1/2 h-[70vh] w-[55vw] -translate-y-1/2 rounded-l-[var(--radius-xl)] bg-gradient-to-l from-[#fce7eb]/80 to-transparent" />
             <div className="absolute right-[8%] top-1/2 h-[60vh] w-[45vw] -translate-y-1/2 rounded-[var(--radius-lg)] shadow-2xl">
-                     <img
-  src="https://i.pinimg.com/736x/69/f6/c6/69f6c6abd053ff2ec366fb05905248e1.jpg"
-  alt="Hero visual"
-  className="h-full w-full object-cover rounded-[var(--radius-lg)]"
-/>
-       
+              <img
+                src="https://i.pinimg.com/736x/69/f6/c6/69f6c6abd053ff2ec366fb05905248e1.jpg"
+                alt="Hero visual"
+                className="h-full w-full object-cover rounded-[var(--radius-lg)]"
+              />
             </div>
           </div>
 
@@ -190,10 +183,10 @@ export default function HomePage() {
               viewport={{ once: true }}
               className="flex justify-center"
             >
-               <img
-  src="https://i.pinimg.com/736x/4f/61/bb/4f61bbca3a4868852c6192e1109a9df9.jpg"
-                aspectRatio="square"
-                label="Illustration"
+              <img
+                src="https://i.pinimg.com/736x/4f/61/bb/4f61bbca3a4868852c6192e1109a9df9.jpg"
+                // aspectRatio="square"
+                // label="Illustration"
                 className="max-h-[380px] w-full max-w-md"
               />
             </motion.div>
@@ -232,10 +225,10 @@ export default function HomePage() {
               </motion.button>
             </div>
             <div className="w-full max-w-md flex-shrink-0">
-             <img
+              <img
                 src="https://i.pinimg.com/736x/1d/66/e1/1d66e1eefc38a3348ec909d8d4fedca6.jpg"
-                aspectRatio="video"
-                label="Guide / Doctor"
+                // aspectRatio="video"
+                // label="Guide / Doctor"
                 className="rounded-[var(--radius-lg)]"
               />
             </div>

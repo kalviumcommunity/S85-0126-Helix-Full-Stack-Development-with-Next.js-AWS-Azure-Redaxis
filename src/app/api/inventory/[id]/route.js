@@ -25,13 +25,16 @@ function parseIntOrThrow(value, fieldName) {
 ========================= */
 export async function GET(req, context) {
   try {
+    const { params } = context;
+    const awaitedParams = await params;
+
     const role = req.headers.get("x-user-role");
 
     if (!["HOSPITAL", "NGO"].includes(role)) {
       return sendError("Access denied", "FORBIDDEN", 403);
     }
 
-    const inventoryId = parseIntOrThrow(context.params.id, "inventory ID");
+    const inventoryId = parseIntOrThrow(awaitedParams.id, "inventory ID");
 
     const inventory = await prisma.bloodInventory.findUnique({
       where: { id: inventoryId },
@@ -54,6 +57,9 @@ export async function GET(req, context) {
 ========================= */
 export async function PUT(req, context) {
   try {
+    const { params } = context;
+    const awaitedParams = await params;
+
     const role = req.headers.get("x-user-role");
     const userId = parseIntOrThrow(req.headers.get("x-user-id"), "user ID");
 
@@ -61,7 +67,7 @@ export async function PUT(req, context) {
       return sendError("Only hospitals can update inventory", "FORBIDDEN", 403);
     }
 
-    const inventoryId = parseIntOrThrow(context.params.id, "inventory ID");
+    const inventoryId = parseIntOrThrow(awaitedParams.id, "inventory ID");
 
     const body = await req.json();
     const parsedBody = updateInventorySchema.safeParse(body);
@@ -109,6 +115,9 @@ export async function PUT(req, context) {
 ========================= */
 export async function DELETE(req, context) {
   try {
+    const { params } = context;
+    const awaitedParams = await params;
+
     const role = req.headers.get("x-user-role");
     const userId = parseIntOrThrow(req.headers.get("x-user-id"), "user ID");
 
@@ -116,7 +125,7 @@ export async function DELETE(req, context) {
       return sendError("Only hospitals can delete inventory", "FORBIDDEN", 403);
     }
 
-    const inventoryId = parseIntOrThrow(context.params.id, "inventory ID");
+    const inventoryId = parseIntOrThrow(awaitedParams.id, "inventory ID");
 
     const inventory = await prisma.bloodInventory.findUnique({
       where: { id: inventoryId },

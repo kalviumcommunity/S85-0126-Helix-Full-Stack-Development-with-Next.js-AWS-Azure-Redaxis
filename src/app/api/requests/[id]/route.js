@@ -23,15 +23,18 @@ function parseIntOrThrow(value, fieldName) {
    GET request by ID
    (HOSPITAL, NGO, DONOR)
 ========================= */
-export async function GET(req, { params }) {
+export async function GET(req, context) {
   try {
+    const { params } = context;
+    const awaitedParams = await params;
+
     const role = req.headers.get("x-user-role");
 
     if (!["HOSPITAL", "NGO", "DONOR"].includes(role)) {
       return sendError("Access denied", "FORBIDDEN", 403);
     }
 
-    const requestId = parseIntOrThrow(params.id, "request ID");
+    const requestId = parseIntOrThrow(awaitedParams.id, "request ID");
 
     const request = await prisma.bloodRequest.findUnique({
       where: { id: requestId },
@@ -52,8 +55,11 @@ export async function GET(req, { params }) {
    UPDATE request
    (HOSPITAL → own only)
 ========================= */
-export async function PUT(req, { params }) {
+export async function PUT(req, context) {
   try {
+    const { params } = context;
+    const awaitedParams = await params;
+
     const role = req.headers.get("x-user-role");
     const userId = parseIntOrThrow(req.headers.get("x-user-id"), "user ID");
 
@@ -61,14 +67,14 @@ export async function PUT(req, { params }) {
       return sendError("Only hospitals can update requests", "FORBIDDEN", 403);
     }
 
-    const requestId = parseIntOrThrow(params.id, "request ID");
+    const requestId = parseIntOrThrow(awaitedParams.id, "request ID");
 
     const body = await req.json();
     const parsedBody = updateRequestSchema.safeParse(body);
 
     if (!parsedBody.success) {
       const error = new Error(
-        parsedBody.error.errors[0]?.message || "Invalid input"
+        parsedBody.error.issues?.[0]?.message || "Invalid input"
       );
       error.status = 400;
       error.type = "VALIDATION_ERROR";

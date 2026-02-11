@@ -22,7 +22,11 @@ function parseIntOrThrow(value, fieldName) {
 ========================= */
 export async function GET(req, context) {
   try {
-    const paramUserId = parseIntOrThrow(context.params.id, "user ID");
+    const { params } = context;
+    const awaitedParams = await params;
+
+    const paramUserId = parseIntOrThrow(awaitedParams.id, "user ID");
+
     const tokenUserId = parseIntOrThrow(
       req.headers.get("x-user-id"),
       "user ID"
@@ -56,7 +60,11 @@ export async function GET(req, context) {
 ========================= */
 export async function PUT(req, context) {
   try {
-    const paramUserId = parseIntOrThrow(context.params.id, "user ID");
+    const { params } = context;
+    const awaitedParams = await params;
+
+    const paramUserId = parseIntOrThrow(awaitedParams.id, "user ID");
+
     const tokenUserId = parseIntOrThrow(
       req.headers.get("x-user-id"),
       "user ID"
@@ -95,7 +103,11 @@ export async function PUT(req, context) {
 ========================= */
 export async function DELETE(req, context) {
   try {
-    const paramUserId = parseIntOrThrow(context.params.id, "user ID");
+    const { params } = context;
+    const awaitedParams = await params;
+
+    const paramUserId = parseIntOrThrow(awaitedParams.id, "user ID");
+
     const tokenUserId = parseIntOrThrow(
       req.headers.get("x-user-id"),
       "user ID"
