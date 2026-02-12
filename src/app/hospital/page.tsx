@@ -433,7 +433,7 @@ export default function HospitalPage() {
               <h2 className="text-2xl font-bold tracking-tight text-[var(--foreground)]">
                 Overview
               </h2>
-              <p className="mt-1 text-[var(--muted)]">Visual placeholder</p>
+              {/* <p className="mt-1 text-[var(--muted)]">Visual placeholder</p> */}
               <div className="mt-6">
                             <img
                 src="https://i.pinimg.com/736x/58/43/07/584307f1dbe565d5d53fb245c36f75c3.jpg"
@@ -626,9 +626,9 @@ export default function HospitalPage() {
                   {creatingRequest ? "Creating..." : "Create request"}
                 </button>
               </div>
-              <p className="sm:col-span-3 text-xs text-[var(--muted)]">
+              {/* <p className="sm:col-span-3 text-xs text-[var(--muted)]">
                 Note: current backend request schema stores blood group + units and sets status to PENDING.
-              </p>
+              </p> */}
             </div>
           </div>
         </motion.div>
