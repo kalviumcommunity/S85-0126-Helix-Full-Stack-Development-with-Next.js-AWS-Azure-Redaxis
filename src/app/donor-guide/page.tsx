@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Heart, CheckCircle2, AlertCircle, Droplet } from "lucide-react";
 import { Nav } from "@/components/layout/Nav";
 import { GlassCard } from "@/components/ui/GlassCard";
+import Link from "next/link";
 
 export default function DonorGuidePage() {
   const sections = [
@@ -256,12 +257,19 @@ export default function DonorGuidePage() {
             >
               Become a Donor
             </a>
-            <a
+            {/* <a
               href="/"
               className="rounded-xl border border-[var(--glass-border)] bg-white/70 px-8 py-3 text-sm font-semibold text-[var(--accent-deep)] backdrop-blur transition hover:bg-white/90"
             >
               Back Home
-            </a>
+            </a> */}
+            
+<Link
+  href="/"
+  className="rounded-xl border border-[var(--glass-border)] bg-white/70 px-8 py-3 text-sm font-semibold text-[var(--accent-deep)] backdrop-blur transition hover:bg-white/90"
+>
+  Back Home
+</Link>
           </motion.div>
         </motion.div>
       </main>

@@ -201,7 +201,7 @@ export default function DonorPage() {
                 <div className="p-0">
                   <div className="relative h-36 w-full overflow-hidden rounded-t-lg">
                     <img
-                      src="https://i.pinimg.com/1200x/af/48/43/af48435a71106620efcfe205e38dab92.jpg"
+                      src="https://i.pinimg.com/736x/6a/ca/44/6aca44c1bbc0afb5a4ad3e165b048c6a.jpg"
                       className="h-full w-full rounded-t-lg rounded-b-none"
                       alt="Hospital"
                     />
@@ -246,7 +246,7 @@ export default function DonorPage() {
               <button
                 type="button"
                 onClick={loadRequests}
-                className="rounded-xl border border-[var(--glass-border)] bg-white/70 px-4 py-2 text-sm font-semibold text-(--accent-deep) backdrop-blur transition hover:bg-white/90"
+                className="rounded-xl border border-[var(--glass-border)] bg-white/70 px-4 py-2 text-sm font-semibold text-[var(--accent-deep)] backdrop-blur transition hover:bg-white/90"
               >
                 Refresh
               </button>
@@ -257,7 +257,7 @@ export default function DonorPage() {
                 {Array.from({ length: 6 }).map((_, i) => (
                   <div
                     key={i}
-                    className="h-40 rounded-[var(--radius-lg)] border border-[var(--glass-border)] bg-white/70 shadow-[var(--shadow-soft)] animate-pulse"
+                    className="h-40 rounded-lg border border-[var(--glass-border)] bg-white/70 shadow-[var(--shadow-soft)] animate-pulse"
                   />
                 ))}
               </div>
@@ -266,7 +266,7 @@ export default function DonorPage() {
                 {requestsError}
               </div>
             ) : requestCards.length === 0 ? (
-              <div className="mt-6 rounded-2xl border border-[var(--glass-border)] bg-white/70 px-5 py-4 text-sm text-(--muted)">
+              <div className="mt-6 rounded-2xl border border-[var(--glass-border)] bg-white/70 px-5 py-4 text-sm text-[var(--muted)]">
                 No active requests right now.
               </div>
             ) : (
